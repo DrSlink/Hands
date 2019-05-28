@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -50,9 +51,7 @@ public class Camera2Fragment extends Fragment {
      * Tag for the {@link Log}.
      */
     private static final String TAG = "TfLiteCameraDemo";
-
     private static final int PERMISSIONS_REQUEST_CODE = 1;
-
     private boolean checkedPermissions = false;
 
     /**
@@ -197,7 +196,6 @@ public class Camera2Fragment extends Fragment {
                 }
             };
 
-
     /**
      * Resizes image.
      * <p>
@@ -260,17 +258,16 @@ public class Camera2Fragment extends Fragment {
      * Layout the preview and buttons.
      */
     @Override
-    public View onCreateView(
-            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull
+                                     LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_camera2, container, false);
     }
 
-
-    /**
-     * Connect the buttons to their event handler.
-     */
+    //    /**
+//     * Connect the buttons to their event handler.
+//     */
     @Override
-    public void onViewCreated(final View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull final View view, Bundle savedInstanceState) {
         textureView = view.findViewById(R.id.texture);
     }
 
@@ -303,7 +300,8 @@ public class Camera2Fragment extends Fragment {
      */
     private void setUpCameraOutputs(int width, int height) {
         Activity activity = getActivity();
-        CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
+        CameraManager manager = (CameraManager) Objects.requireNonNull(activity,
+                "Activity for setUpCamera permissions shouldn't be null").getSystemService(Context.CAMERA_SERVICE);
         try {
             for (String cameraId : manager.getCameraIdList()) {
                 CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
@@ -417,7 +415,7 @@ public class Camera2Fragment extends Fragment {
         Activity activity = getActivity();
         try {
             PackageInfo info =
-                    activity
+                    Objects.requireNonNull(activity, "Activity for getting permissions shouldn't be null")
                             .getPackageManager()
                             .getPackageInfo(activity.getPackageName(), PackageManager.GET_PERMISSIONS);
             String[] ps = info.requestedPermissions;
@@ -444,7 +442,8 @@ public class Camera2Fragment extends Fragment {
         setUpCameraOutputs(width, height);
         configureTransform(width, height);
         Activity activity = getActivity();
-        CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
+        CameraManager manager = (CameraManager) Objects.requireNonNull(activity,
+                "Activity for open camera permissions shouldn't be null").getSystemService(Context.CAMERA_SERVICE);
         try {
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
@@ -461,7 +460,8 @@ public class Camera2Fragment extends Fragment {
 
     private boolean allPermissionsGranted() {
         for (String permission : getRequiredPermissions()) {
-            if (ContextCompat.checkSelfPermission(getActivity(), permission)
+            if (ContextCompat.checkSelfPermission(Objects.requireNonNull(getActivity(),
+                    "Permission checking should get nonnull activity"), permission)
                     != PackageManager.PERMISSION_GRANTED) {
                 return false;
             }
@@ -591,7 +591,6 @@ public class Camera2Fragment extends Fragment {
         }
         textureView.setTransform(matrix);
     }
-
 
     /**
      * Compares two {@code Size}s based on their areas.
